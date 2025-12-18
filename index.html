@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Check-in Hebdo - Soul Guide</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Agrandir', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #412838 0%, #683729 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #FDF7F0;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #412838 0%, #683729 100%);
+            color: #FDF7F0;
+            padding: 30px 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .logo-container {
+            margin-bottom: 15px;
+        }
+        
+        .logo {
+            max-width: 350px;
+            height: auto;
+        }
+        
+        /* RESPONSIVE MOBILE */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .logo {
+                max-width: 280px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .header p {
+                font-size: 14px;
+            }
+            
+            .linktree-badge {
+                font-size: 12px;
+                padding: 6px 15px;
+            }
+            
+            .tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tab {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .week-selector {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+            }
+            
+            .week-selector label {
+                font-size: 16px;
+            }
+            
+            .week-selector select {
+                width: 100%;
+            }
+            
+            .question-card {
+                padding: 20px 15px;
+            }
+            
+            .question-icon {
+                font-size: 32px;
+            }
+            
+            .question-text {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+            
+            .emoji-scale {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .emoji-option {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+                padding: 15px 10px;
+            }
+            
+            .emoji-option .emoji {
+                font-size: 32px;
+            }
+            
+            .emoji-option .label {
+                font-size: 12px;
+            }
+            
+            .counter-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+            
+            .counter-value {
+                font-size: 36px;
+                min-width: 60px;
+            }
+            
+            .slider-value {
+                font-size: 20px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+            
+            .overview-stats {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-card .value {
+                font-size: 36px;
+            }
+            
+            .chart-section {
+                padding: 20px 15px;
+            }
+            
+            .chart-title {
+                font-size: 20px;
+            }
+            
+            .footer {
+                padding: 15px;
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo {
+                max-width: 240px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .emoji-option {
+                flex: 1 1 100%;
+            }
+            
+            .question-text {
+                font-size: 16px;
+            }
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #C8B256;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+            color: #FDF7F0;
+        }
+        
+        .linktree-badge {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 18px;
+            background: #C8B256;
+            color: #412838;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .linktree-badge:hover {
+            background: #B1833E;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(200, 178, 86, 0.4);
+        }
+        
+        .tabs {
+            display: flex;
+            background: #F5EDE3;
+            border-bottom: 2px solid #B1833E;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: #683729;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            background: rgba(200, 178, 86, 0.2);
+        }
+        
+        .tab.active {
+            background: #FDF7F0;
+            color: #412838;
+            border-bottom: 3px solid #C8B256;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            background: #FDF7F0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .week-selector {
+            background: #F5EDE3;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid #B1833E;
+        }
+        
+        .week-selector label {
+            font-weight: 600;
+            color: #412838;
+            font-size: 18px;
+        }
+        
+        .week-selector select {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #B1833E;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #FDF7F0;
+            color: #412838;
+        }
+        
+        .question-card {
+            background: #FDF7F0;
+            border: 2px solid #B1833E;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+        }
+        
+        .question-card:hover {
+            border-color: #C8B256;
+            box-shadow: 0 8px 25px rgba(177, 131, 62, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .question-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #412838;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #412838, #C8B256, #B1833E, #683729);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #FDF7F0;
+            cursor: pointer;
+            border: 4px solid #C8B256;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            border-color: #B1833E;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #FDF7F0;
+            cursor: pointer;
+            border: 4px solid #C8B256;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #683729;
+        }
+        
+        .slider-value {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #C8B256;
+        }
+        
+        .emoji-scale {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .emoji-option {
+            flex: 1;
+            padding: 20px;
+            border: 3px solid #B1833E;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #FDF7F0;
+        }
+        
+        .emoji-option:hover {
+            transform: translateY(-5px);
+            border-color: #C8B256;
+        }
+        
+        .emoji-option.selected {
+            border-color: #C8B256;
+            background: linear-gradient(135deg, #C8B256 0%, #B1833E 100%);
+            color: #FDF7F0;
+        }
+        
+        .emoji-option .emoji {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .emoji-option .label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .counter-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .counter-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #C8B256 0%, #B1833E 100%);
+            color: #FDF7F0;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        
+        .counter-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #B1833E 0%, #683729 100%);
+        }
+        
+        .counter-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #412838;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin: 40px 0 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #C8B256 0%, #B1833E 100%);
+            color: #412838;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(200, 178, 86, 0.4);
+            background: linear-gradient(135deg, #B1833E 0%, #683729 100%);
+            color: #FDF7F0;
+        }
+        
+        .completion-message {
+            background: linear-gradient(135deg, #B1833E 0%, #683729 100%);
+            color: #FDF7F0;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .completion-message.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #412838 0%, #683729 100%);
+            color: #FDF7F0;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #C8B256;
+        }
+        
+        .stat-card .value {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #C8B256;
+        }
+        
+        .stat-card .label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #F5EDE3;
+            border-top: 2px solid #B1833E;
+            color: #683729;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #C8B256;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            color: #B1833E;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <svg class="logo" viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Soul en jaune -->
+                    <text x="150" y="80" font-family="Arial Black, sans-serif" font-size="64" font-weight="bold" fill="#C8B256">Soul</text>
+                    <!-- Guide en jaune aussi -->
+                    <text x="310" y="80" font-family="Arial Black, sans-serif" font-size="64" font-weight="bold" fill="#C8B256">Guide</text>
+                    <!-- Tagline -->
+                    <text x="300" y="115" text-anchor="middle" font-family="Georgia, serif" font-size="18" fill="#FDF7F0">Le podcast qui résonne en toi</text>
+                </svg>
+            </div>
+            <h1>✨ Mon Check-in Hebdo</h1>
+            <p>5 minutes pour faire le point sur ta semaine</p>
+            <a href="https://linktr.ee/SoulGuide_byRym" target="_blank" class="linktree-badge">🔗 Retrouve Soul Guide</a>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('checkin')">📝 Check-in</button>
+            <button class="tab" onclick="showTab('overview')">📊 Vue d'ensemble</button>
+            <button class="tab" onclick="showTab('details')">📈 Détails par question</button>
+        </div>
+        
+        <div class="content">
+            <!-- Check-in Tab -->
+            <div id="checkin" class="tab-content active">
+                <div class="week-selector">
+                    <label>📅</label>
+                    <select id="weekSelector" onchange="loadWeek()">
+                        <option value="">Sélectionner une semaine</option>
+                    </select>
+                </div>
+                
+                <div id="questionsContainer"></div>
+                
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="saveWeek()">💾 Sauvegarder ma semaine</button>
+                </div>
+                
+                <div class="completion-message" id="completionMsg">
+                    🎉 Super ! Ta semaine est enregistrée !
+                </div>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content">
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="exportToExcel()">📥 Exporter vers Excel</button>
+                    <button class="btn btn-secondary" onclick="exportData()">💾 Sauvegarder données</button>
+                    <button class="btn btn-secondary" onclick="importData()">📂 Importer données</button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImport(event)">
+                
+                <div class="overview-stats" id="overviewStats"></div>
+                
+                <div class="chart-section">
+                    <div class="chart-title">🎯 Résumé global & corrélations</div>
+                    <div id="globalSummary" style="padding: 20px; background: white; border-radius: 8px; margin-bottom: 20px;"></div>
+                </div>
+            </div>
+            
+            <!-- Details Tab -->
+            <div id="details" class="tab-content">
+                <div class="chart-section">
+                    <div class="chart-title">📊 Moyenne détaillée par question</div>
+                    <div id="detailsContent"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            Une création <a href="https://linktr.ee/SoulGuide_byRym" target="_blank">Soul Guide</a> 🎙️
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: 'social',
+                icon: '👥',
+                text: 'Cette semaine, comment évalues-tu ta vie sociale ?',
+                type: 'emoji',
+                options: [
+                    { emoji: '😔', label: 'Isolé', value: 1 },
+                    { emoji: '😐', label: 'Peu', value: 2 },
+                    { emoji: '🙂', label: 'Correct', value: 3 },
+                    { emoji: '😊', label: 'Bien', value: 4 },
+                    { emoji: '🤗', label: 'Super !', value: 5 }
+                ]
+            },
+            {
+                id: 'family',
+                icon: '👨‍👩‍👧‍👦',
+                text: 'As-tu passé du temps de qualité avec ta famille ?',
+                type: 'emoji',
+                options: [
+                    { emoji: '❌', label: 'Pas du tout', value: 1 },
+                    { emoji: '😕', label: 'Très peu', value: 2 },
+                    { emoji: '👌', label: 'Un peu', value: 3 },
+                    { emoji: '😊', label: 'Pas mal', value: 4 },
+                    { emoji: '❤️', label: 'Beaucoup !', value: 5 }
+                ]
+            },
+            {
+                id: 'work',
+                icon: '💼',
+                text: 'Comment te sens-tu par rapport à ton travail ?',
+                type: 'slider',
+                min: 0,
+                max: 10,
+                labels: { left: 'Épuisé 😫', right: 'Épanoui 🚀' }
+            },
+            {
+                id: 'passion',
+                icon: '🎯',
+                text: 'Combien d\'heures as-tu consacrées à tes passions/loisirs ?',
+                type: 'counter',
+                unit: 'heures'
+            },
+            {
+                id: 'sport',
+                icon: '💪',
+                text: 'Combien de fois as-tu fait du sport/activité physique ?',
+                type: 'counter',
+                unit: 'fois'
+            },
+            {
+                id: 'sleep',
+                icon: '😴',
+                text: 'Comment évalues-tu la qualité de ton sommeil ?',
+                type: 'emoji',
+                options: [
+                    { emoji: '🌙', label: 'Mauvais', value: 1 },
+                    { emoji: '😪', label: 'Moyen', value: 2 },
+                    { emoji: '😌', label: 'Correct', value: 3 },
+                    { emoji: '😴', label: 'Bien', value: 4 },
+                    { emoji: '✨', label: 'Excellent', value: 5 }
+                ]
+            },
+            {
+                id: 'mood',
+                icon: '🧠',
+                text: 'Niveau de bonheur général cette semaine ?',
+                type: 'slider',
+                min: 0,
+                max: 10,
+                labels: { left: 'Difficile 😢', right: 'Heureux 😄' }
+            },
+            {
+                id: 'stress',
+                icon: '🎭',
+                text: 'Ton niveau de stress cette semaine ?',
+                type: 'slider',
+                min: 0,
+                max: 10,
+                labels: { left: 'Zen 🧘', right: 'Stressé 😰' }
+            },
+            {
+                id: 'growth',
+                icon: '📚',
+                text: 'As-tu appris quelque chose de nouveau ?',
+                type: 'emoji',
+                options: [
+                    { emoji: '❌', label: 'Non', value: 0 },
+                    { emoji: '📖', label: 'Un peu', value: 1 },
+                    { emoji: '🎓', label: 'Oui !', value: 2 },
+                    { emoji: '🚀', label: 'Beaucoup !', value: 3 }
+                ]
+            },
+            {
+                id: 'contribution',
+                icon: '🌍',
+                text: 'Te sens-tu utile et aligné avec tes valeurs ?',
+                type: 'emoji',
+                options: [
+                    { emoji: '😞', label: 'Pas du tout', value: 1 },
+                    { emoji: '😐', label: 'Un peu', value: 2 },
+                    { emoji: '🙂', label: 'Oui', value: 3 },
+                    { emoji: '😊', label: 'Beaucoup', value: 4 },
+                    { emoji: '🌟', label: 'Totalement !', value: 5 }
+                ]
+            }
+        ];
+
+        let data = {};
+        let currentWeek = '';
+
+        function initWeekSelector() {
+            const select = document.getElementById('weekSelector');
+            const now = new Date();
+            const currentWeekNum = getWeekNumber(now);
+            
+            for (let i = 1; i <= 52; i++) {
+                const option = document.createElement('option');
+                option.value = `week${i}`;
+                option.textContent = `Semaine ${i}${i === currentWeekNum ? ' (cette semaine)' : ''}`;
+                if (i === currentWeekNum) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+            
+            if (currentWeekNum) {
+                currentWeek = `week${currentWeekNum}`;
+                loadWeek();
+            }
+        }
+
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
+
+        function loadWeek() {
+            currentWeek = document.getElementById('weekSelector').value;
+            if (!currentWeek) return;
+            
+            if (!data[currentWeek]) {
+                data[currentWeek] = {};
+            }
+            
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            
+            questions.forEach(q => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                
+                const icon = document.createElement('div');
+                icon.className = 'question-icon';
+                icon.textContent = q.icon;
+                
+                const text = document.createElement('div');
+                text.className = 'question-text';
+                text.textContent = q.text;
+                
+                card.appendChild(icon);
+                card.appendChild(text);
+                
+                if (q.type === 'emoji') {
+                    const scale = document.createElement('div');
+                    scale.className = 'emoji-scale';
+                    
+                    q.options.forEach(opt => {
+                        const option = document.createElement('div');
+                        option.className = 'emoji-option';
+                        if (data[currentWeek][q.id] === opt.value) {
+                            option.classList.add('selected');
+                        }
+                        
+                        const emoji = document.createElement('span');
+                        emoji.className = 'emoji';
+                        emoji.textContent = opt.emoji;
+                        
+                        const label = document.createElement('span');
+                        label.className = 'label';
+                        label.textContent = opt.label;
+                        
+                        option.appendChild(emoji);
+                        option.appendChild(label);
+                        
+                        option.onclick = () => {
+                            const allOptions = card.querySelectorAll('.emoji-option');
+                            allOptions.forEach(o => o.classList.remove('selected'));
+                            option.classList.add('selected');
+                            data[currentWeek][q.id] = opt.value;
+                            saveData();
+                        };
+                        
+                        scale.appendChild(option);
+                    });
+                    
+                    scale.id = `${q.id}-scale`;
+                    card.appendChild(scale);
+                    
+                } else if (q.type === 'slider') {
+                    const sliderContainer = document.createElement('div');
+                    sliderContainer.className = 'slider-container';
+                    
+                    const slider = document.createElement('input');
+                    slider.type = 'range';
+                    slider.className = 'slider';
+                    slider.min = q.min;
+                    slider.max = q.max;
+                    slider.value = data[currentWeek][q.id] !== undefined ? data[currentWeek][q.id] : Math.floor((q.max - q.min) / 2);
+                    slider.id = `${q.id}-slider`;
+                    
+                    const valueDisplay = document.createElement('div');
+                    valueDisplay.className = 'slider-value';
+                    valueDisplay.textContent = slider.value + ' / ' + q.max;
+                    
+                    slider.oninput = (e) => {
+                        valueDisplay.textContent = e.target.value + ' / ' + q.max;
+                        data[currentWeek][q.id] = parseInt(e.target.value);
+                    };
+                    
+                    const labels = document.createElement('div');
+                    labels.className = 'slider-labels';
+                    labels.innerHTML = `<span>${q.labels.left}</span><span>${q.labels.right}</span>`;
+                    
+                    sliderContainer.appendChild(slider);
+                    sliderContainer.appendChild(valueDisplay);
+                    sliderContainer.appendChild(labels);
+                    card.appendChild(sliderContainer);
+                    
+                } else if (q.type === 'counter') {
+                    const group = document.createElement('div');
+                    group.className = 'counter-group';
+                    
+                    const minusBtn = document.createElement('button');
+                    minusBtn.className = 'counter-btn';
+                    minusBtn.textContent = '−';
+                    
+                    const value = document.createElement('div');
+                    value.className = 'counter-value';
+                    value.textContent = data[currentWeek][q.id] || 0;
+                    value.id = `${q.id}-counter`;
+                    
+                    const plusBtn = document.createElement('button');
+                    plusBtn.className = 'counter-btn';
+                    plusBtn.textContent = '+';
+                    
+                    minusBtn.onclick = () => {
+                        let current = parseInt(value.textContent) || 0;
+                        if (current > 0) {
+                            current--;
+                            value.textContent = current;
+                            data[currentWeek][q.id] = current;
+                        }
+                    };
+                    
+                    plusBtn.onclick = () => {
+                        let current = parseInt(value.textContent) || 0;
+                        current++;
+                        value.textContent = current;
+                        data[currentWeek][q.id] = current;
+                    };
+                    
+                    group.appendChild(minusBtn);
+                    group.appendChild(value);
+                    group.appendChild(plusBtn);
+                    card.appendChild(group);
+                }
+                
+                container.appendChild(card);
+            });
+        }
+
+        function saveWeek() {
+            saveData();
+            const msg = document.getElementById('completionMsg');
+            msg.classList.add('show');
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 3000);
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            
+            if (tabId === 'overview') {
+                calculateOverview();
+            } else if (tabId === 'details') {
+                calculateDetails();
+            }
+        }
+
+        function calculateOverview() {
+            const statsContainer = document.getElementById('overviewStats');
+            const globalSummary = document.getElementById('globalSummary');
+            statsContainer.innerHTML = '';
+            globalSummary.innerHTML = '';
+            
+            const totalWeeks = Object.keys(data).length;
+            
+            if (totalWeeks === 0) {
+                statsContainer.innerHTML = '<p style="text-align: center; color: #683729; padding: 40px;">Aucune donnée enregistrée. Commence ton premier check-in ! 🌟</p>';
+                return;
+            }
+            
+            // Calcul des moyennes pour toutes les questions
+            let allAverages = {};
+            questions.forEach(q => {
+                let sum = 0, count = 0;
+                Object.keys(data).forEach(week => {
+                    if (data[week][q.id] !== undefined) {
+                        sum += data[week][q.id];
+                        count++;
+                    }
+                });
+                allAverages[q.id] = count > 0 ? (sum / count) : 0;
+            });
+            
+            // Calcul de la moyenne globale (normalisation sur 10)
+            let globalScore = 0;
+            let normalizedScores = {};
+            
+            questions.forEach(q => {
+                let normalized = 0;
+                if (q.type === 'emoji') {
+                    normalized = (allAverages[q.id] / 5) * 10; // Convertir /5 en /10
+                } else if (q.type === 'slider') {
+                    normalized = allAverages[q.id]; // Déjà sur 10
+                } else if (q.type === 'counter') {
+                    normalized = Math.min((allAverages[q.id] / 10) * 10, 10); // Normaliser
+                }
+                normalizedScores[q.id] = normalized;
+                globalScore += normalized;
+            });
+            
+            globalScore = (globalScore / questions.length).toFixed(1);
+            
+            // Cartes statistiques principales
+            const stats = [
+                { label: 'Semaines suivies', value: totalWeeks, icon: '📅' },
+                { label: 'Score global', value: globalScore + '/10', icon: '⭐' },
+                { label: 'Bonheur moyen', value: allAverages.mood.toFixed(1) + '/10', icon: '😊' },
+                { label: 'Stress moyen', value: allAverages.stress.toFixed(1) + '/10', icon: '🎭' }
+            ];
+            
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div style="font-size: 40px;">${stat.icon}</div>
+                    <div class="value">${stat.value}</div>
+                    <div class="label">${stat.label}</div>
+                `;
+                statsContainer.appendChild(card);
+            });
+            
+            // Résumé global avec corrélations
+            let summaryHTML = '<div style="font-size: 16px; line-height: 1.8;">';
+            
+            // Analyse bien-être général
+            summaryHTML += `<p style="margin-bottom: 15px;"><strong style="color: #C8B256;">📊 Ton bien-être global : ${globalScore}/10</strong></p>`;
+            
+            if (globalScore >= 7.5) {
+                summaryHTML += `<p style="margin-bottom: 15px;">🌟 Excellent ! Tu es dans une très bonne dynamique.</p>`;
+            } else if (globalScore >= 6) {
+                summaryHTML += `<p style="margin-bottom: 15px;">👍 Plutôt bien ! Quelques ajustements pourraient t'aider à progresser.</p>`;
+            } else {
+                summaryHTML += `<p style="margin-bottom: 15px;">💪 Il y a de la place pour améliorer ton équilibre. Prends soin de toi.</p>`;
+            }
+            
+            // Corrélations intéressantes
+            summaryHTML += '<p style="margin-top: 20px; margin-bottom: 10px;"><strong style="color: #412838;">🔍 Insights :</strong></p><ul style="list-style: none; padding-left: 0;">';
+            
+            // Corrélation sommeil-bonheur
+            if (allAverages.sleep < 3 && allAverages.mood < 6) {
+                summaryHTML += '<li style="margin-bottom: 10px;">💤 Ton sommeil impacte ton bonheur. Priorise tes nuits !</li>';
+            }
+            
+            // Corrélation sport-stress
+            if (allAverages.sport < 2 && allAverages.stress > 6) {
+                summaryHTML += '<li style="margin-bottom: 10px;">🏃 Plus de sport pourrait réduire ton stress.</li>';
+            }
+            
+            // Corrélation passion-satisfaction travail
+            if (allAverages.passion < 3 && allAverages.work < 6) {
+                summaryHTML += '<li style="margin-bottom: 10px;">🎯 Manque de temps passion = baisse de satisfaction au travail. Équilibre-toi !</li>';
+            }
+            
+            // Social-bonheur
+            if (allAverages.social >= 4 && allAverages.mood >= 7) {
+                summaryHTML += '<li style="margin-bottom: 10px;">👥 Tes interactions sociales boostent ton bonheur. Continue !</li>';
+            }
+            
+            // Points forts
+            let strongestArea = Object.keys(normalizedScores).reduce((a, b) => normalizedScores[a] > normalizedScores[b] ? a : b);
+            let strongestQuestion = questions.find(q => q.id === strongestArea);
+            summaryHTML += `<li style="margin-bottom: 10px; color: #1dd1a1;">✅ Ton point fort : <strong>${strongestQuestion.text.substring(0, 40)}...</strong></li>`;
+            
+            // Points à améliorer
+            let weakestArea = Object.keys(normalizedScores).reduce((a, b) => normalizedScores[a] < normalizedScores[b] ? a : b);
+            let weakestQuestion = questions.find(q => q.id === weakestArea);
+            summaryHTML += `<li style="margin-bottom: 10px; color: #ff6b6b;">⚠️ À améliorer : <strong>${weakestQuestion.text.substring(0, 40)}...</strong></li>`;
+            
+            summaryHTML += '</ul></div>';
+            globalSummary.innerHTML = summaryHTML;
+        }
+        
+        function calculateDetails() {
+            const detailsContent = document.getElementById('detailsContent');
+            detailsContent.innerHTML = '';
+            
+            const totalWeeks = Object.keys(data).length;
+            
+            if (totalWeeks === 0) {
+                detailsContent.innerHTML = '<p style="text-align: center; color: #683729; padding: 40px;">Aucune donnée disponible.</p>';
+                return;
+            }
+            
+            questions.forEach(q => {
+                let values = [];
+                Object.keys(data).forEach(week => {
+                    if (data[week][q.id] !== undefined) {
+                        values.push(data[week][q.id]);
+                    }
+                });
+                
+                if (values.length > 0) {
+                    const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    
+                    let maxValue = 10;
+                    if (q.type === 'emoji' && q.options) {
+                        maxValue = Math.max(...q.options.map(o => o.value));
+                    } else if (q.type === 'slider') {
+                        maxValue = q.max;
+                    } else if (q.type === 'counter') {
+                        maxValue = max > 0 ? '∞' : 10;
+                    }
+                    
+                    const percentage = q.type === 'counter' ? 0 : Math.round((avg / maxValue) * 100);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'question-card';
+                    card.innerHTML = `
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="font-size: 32px; margin-right: 15px;">${q.icon}</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 18px; font-weight: 600; color: #412838; margin-bottom: 5px;">${q.text}</div>
+                                <div style="font-size: 14px; color: #683729;">Basé sur ${values.length} semaine(s)</div>
+                            </div>
+                        </div>
+                        <div style="background: #F5EDE3; padding: 20px; border-radius: 8px;">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                                <div>
+                                    <div style="font-size: 12px; color: #683729; margin-bottom: 5px;">Moyenne</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #C8B256;">${avg}${q.type !== 'counter' ? '/' + maxValue : ''}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #683729; margin-bottom: 5px;">Min</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #683729;">${min}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #683729; margin-bottom: 5px;">Max</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #B1833E;">${max}</div>
+                                </div>
+                            </div>
+                            ${q.type !== 'counter' ? `
+                            <div style="margin-top: 15px;">
+                                <div style="background: white; height: 20px; border-radius: 10px; overflow: hidden; border: 2px solid #B1833E;">
+                                    <div style="background: linear-gradient(135deg, #C8B256 0%, #B1833E 100%); height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+                                </div>
+                                <div style="text-align: center; margin-top: 5px; font-size: 14px; color: #683729;">${percentage}%</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    detailsContent.appendChild(card);
+                }
+            });
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            
+            const sheetData = [['Semaine']];
+            questions.forEach(q => {
+                sheetData[0].push(q.text);
+            });
+            
+            const weeks = Object.keys(data).sort((a, b) => {
+                return parseInt(a.replace('week', '')) - parseInt(b.replace('week', ''));
+            });
+            
+            weeks.forEach(week => {
+                const row = [week.replace('week', 'Semaine ')];
+                questions.forEach(q => {
+                    row.push(data[week][q.id] || '');
+                });
+                sheetData.push(row);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Mes check-ins');
+            
+            XLSX.writeFile(wb, 'Mon_Checkin_Hebdo.xlsx');
+        }
+
+        function saveData() {
+            localStorage.setItem('weeklyCheckin', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('weeklyCheckin');
+            if (saved) {
+                data = JSON.parse(saved);
+            }
+        }
+
+        // Initialisation au chargement de la page
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initWeekSelector();
+        });
+    </script>
+</body>
+</html>
