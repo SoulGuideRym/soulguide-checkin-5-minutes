@@ -908,3 +908,354 @@
                     };
                     
                     slider.addEventListener('touchmove', (e) => {
+                        valueDisplay.textContent = e.target.value + ' / ' + q.max;
+                        data[currentWeek][q.id] = parseInt(e.target.value);
+                        saveData();
+                    });
+                    
+                    const labels = document.createElement('div');
+                    labels.className = 'slider-labels';
+                    labels.innerHTML = `<span>${q.labels.left}</span><span>${q.labels.right}</span>`;
+                    
+                    sliderContainer.appendChild(slider);
+                    sliderContainer.appendChild(valueDisplay);
+                    sliderContainer.appendChild(labels);
+                    card.appendChild(sliderContainer);
+                    
+                } else if (q.type === 'counter') {
+                    const group = document.createElement('div');
+                    group.className = 'counter-group';
+                    
+                    const minusBtn = document.createElement('button');
+                    minusBtn.className = 'counter-btn';
+                    minusBtn.textContent = '−';
+                    
+                    const value = document.createElement('div');
+                    value.className = 'counter-value';
+                    value.textContent = data[currentWeek][q.id] || 0;
+                    value.id = `${q.id}-counter`;
+                    
+                    const plusBtn = document.createElement('button');
+                    plusBtn.className = 'counter-btn';
+                    plusBtn.textContent = '+';
+                    
+                    minusBtn.onclick = () => {
+                        let current = parseInt(value.textContent) || 0;
+                        if (current > 0) {
+                            current--;
+                            value.textContent = current;
+                            data[currentWeek][q.id] = current;
+                            saveData();
+                        }
+                    };
+                    
+                    plusBtn.onclick = () => {
+                        let current = parseInt(value.textContent) || 0;
+                        current++;
+                        value.textContent = current;
+                        data[currentWeek][q.id] = current;
+                        saveData();
+                    };
+                    
+                    group.appendChild(minusBtn);
+                    group.appendChild(value);
+                    group.appendChild(plusBtn);
+                    card.appendChild(group);
+                }
+                
+                container.appendChild(card);
+            });
+        }
+
+        function saveWeek() {
+            saveData();
+            const msg = document.getElementById('completionMsg');
+            msg.classList.add('show');
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 3000);
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            
+            if (tabId === 'overview') {
+                calculateOverview();
+            } else if (tabId === 'details') {
+                calculateDetails();
+            }
+        }
+
+        function calculateOverview() {
+            const statsContainer = document.getElementById('overviewStats');
+            const globalSummary = document.getElementById('globalSummary');
+            statsContainer.innerHTML = '';
+            globalSummary.innerHTML = '';
+            
+            const totalWeeks = Object.keys(data).length;
+            
+            if (totalWeeks === 0) {
+                statsContainer.innerHTML = '<p style="text-align: center; color: #683729; padding: 40px;">Aucune donnée enregistrée. Commence ton premier check-in ! 🌟</p>';
+                return;
+            }
+            
+            let allAverages = {};
+            questions.forEach(q => {
+                let sum = 0, count = 0;
+                Object.keys(data).forEach(week => {
+                    if (data[week][q.id] !== undefined) {
+                        sum += data[week][q.id];
+                        count++;
+                    }
+                });
+                allAverages[q.id] = count > 0 ? (sum / count) : 0;
+            });
+            
+            let globalScore = 0;
+            let normalizedScores = {};
+            
+            questions.forEach(q => {
+                let normalized = 0;
+                if (q.type === 'emoji') {
+                    normalized = (allAverages[q.id] / 5) * 10;
+                } else if (q.type === 'slider') {
+                    normalized = allAverages[q.id];
+                } else if (q.type === 'counter') {
+                    normalized = Math.min((allAverages[q.id] / 10) * 10, 10);
+                }
+                normalizedScores[q.id] = normalized;
+                globalScore += normalized;
+            });
+            
+            globalScore = (globalScore / questions.length).toFixed(1);
+            
+            const stats = [
+                { label: 'Semaines suivies', value: totalWeeks, icon: '📅' },
+                { label: 'Score global', value: globalScore + '/10', icon: '⭐' },
+                { label: 'Bonheur moyen', value: allAverages.mood.toFixed(1) + '/10', icon: '😊' },
+                { label: 'Stress moyen', value: allAverages.stress.toFixed(1) + '/10', icon: '🎭' }
+            ];
+            
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div style="font-size: 40px;">${stat.icon}</div>
+                    <div class="value">${stat.value}</div>
+                    <div class="label">${stat.label}</div>
+                `;
+                statsContainer.appendChild(card);
+            });
+            
+            let summaryHTML = '<div style="font-size: 16px; line-height: 1.8;">';
+            summaryHTML += `<p style="margin-bottom: 15px;"><strong style="color: #C8B256;">📊 Ton bien-être global : ${globalScore}/10</strong></p>`;
+            
+            if (globalScore >= 7.5) {
+                summaryHTML += `<p style="margin-bottom: 15px;">🌟 Excellent ! Tu es dans une très bonne dynamique.</p>`;
+            } else if (globalScore >= 6) {
+                summaryHTML += `<p style="margin-bottom: 15px;">👍 Plutôt bien ! Quelques ajustements pourraient t'aider à progresser.</p>`;
+            } else {
+                summaryHTML += `<p style="margin-bottom: 15px;">💪 Il y a de la place pour améliorer ton équilibre. Prends soin de toi.</p>`;
+            }
+            
+            summaryHTML += '<p style="margin-top: 20px; margin-bottom: 10px;"><strong style="color: #412838;">🔍 Insights :</strong></p><ul style="list-style: none; padding-left: 0;">';
+            
+            if (allAverages.sleep < 3 && allAverages.mood < 6) {
+                summaryHTML += '<li style="margin-bottom: 10px;">💤 Ton sommeil impacte ton bonheur. Priorise tes nuits !</li>';
+            }
+            
+            if (allAverages.sport < 2 && allAverages.stress > 6) {
+                summaryHTML += '<li style="margin-bottom: 10px;">🏃 Plus de sport pourrait réduire ton stress.</li>';
+            }
+            
+            if (allAverages.passion < 3 && allAverages.work < 6) {
+                summaryHTML += '<li style="margin-bottom: 10px;">🎯 Manque de temps passion = baisse de satisfaction au travail. Équilibre-toi !</li>';
+            }
+            
+            if (allAverages.social >= 4 && allAverages.mood >= 7) {
+                summaryHTML += '<li style="margin-bottom: 10px;">👥 Tes interactions sociales boostent ton bonheur. Continue !</li>';
+            }
+            
+            let strongestArea = Object.keys(normalizedScores).reduce((a, b) => normalizedScores[a] > normalizedScores[b] ? a : b);
+            let strongestQuestion = questions.find(q => q.id === strongestArea);
+            summaryHTML += `<li style="margin-bottom: 10px; color: #1dd1a1;">✅ Ton point fort : <strong>${strongestQuestion.text.substring(0, 40)}...</strong></li>`;
+            
+            let weakestArea = Object.keys(normalizedScores).reduce((a, b) => normalizedScores[a] < normalizedScores[b] ? a : b);
+            let weakestQuestion = questions.find(q => q.id === weakestArea);
+            summaryHTML += `<li style="margin-bottom: 10px; color: #ff6b6b;">⚠️ À améliorer : <strong>${weakestQuestion.text.substring(0, 40)}...</strong></li>`;
+            
+            summaryHTML += '</ul></div>';
+            globalSummary.innerHTML = summaryHTML;
+        }
+        
+        function calculateDetails() {
+            const detailsContent = document.getElementById('detailsContent');
+            detailsContent.innerHTML = '';
+            
+            const totalWeeks = Object.keys(data).length;
+            
+            if (totalWeeks === 0) {
+                detailsContent.innerHTML = '<p style="text-align: center; color: #683729; padding: 40px;">Aucune donnée disponible.</p>';
+                return;
+            }
+            
+            questions.forEach(q => {
+                let values = [];
+                Object.keys(data).forEach(week => {
+                    if (data[week][q.id] !== undefined) {
+                        values.push(data[week][q.id]);
+                    }
+                });
+                
+                if (values.length > 0) {
+                    const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    
+                    let maxValue = 10;
+                    if (q.type === 'emoji' && q.options) {
+                        maxValue = Math.max(...q.options.map(o => o.value));
+                    } else if (q.type === 'slider') {
+                        maxValue = q.max;
+                    } else if (q.type === 'counter') {
+                        maxValue = max > 0 ? '∞' : 10;
+                    }
+                    
+                    const percentage = q.type === 'counter' ? 0 : Math.round((avg / maxValue) * 100);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'question-card';
+                    card.innerHTML = `
+                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                            <div style="font-size: 32px; margin-right: 15px;">${q.icon}</div>
+                            <div style="flex: 1;">
+                                <div style="font-size: 18px; font-weight: 600; color: #412838; margin-bottom: 5px;">${q.text}</div>
+                                <div style="font-size: 14px; color: #683729;">Basé sur ${values.length} semaine(s)</div>
+                            </div>
+                        </div>
+                        <div style="background: #F5EDE3; padding: 20px; border-radius: 8px;">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+                                <div>
+                                    <div style="font-size: 12px; color: #683729; margin-bottom: 5px;">Moyenne</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #C8B256;">${avg}${q.type !== 'counter' ? '/' + maxValue : ''}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #683729; margin-bottom: 5px;">Min</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #683729;">${min}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: #683729; margin-bottom: 5px;">Max</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #B1833E;">${max}</div>
+                                </div>
+                            </div>
+                            ${q.type !== 'counter' ? `
+                            <div style="margin-top: 15px;">
+                                <div style="background: white; height: 20px; border-radius: 10px; overflow: hidden; border: 2px solid #B1833E;">
+                                    <div style="background: linear-gradient(135deg, #C8B256 0%, #B1833E 100%); height: 100%; width: ${percentage}%; transition: width 0.3s;"></div>
+                                </div>
+                                <div style="text-align: center; margin-top: 5px; font-size: 14px; color: #683729;">${percentage}%</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    detailsContent.appendChild(card);
+                }
+            });
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            
+            const sheetData = [['Semaine']];
+            questions.forEach(q => {
+                sheetData[0].push(q.text);
+            });
+            
+            const weeks = Object.keys(data).sort((a, b) => {
+                return parseInt(a.replace('week', '')) - parseInt(b.replace('week', ''));
+            });
+            
+            weeks.forEach(week => {
+                const row = [week.replace('week', 'Semaine ')];
+                questions.forEach(q => {
+                    row.push(data[week][q.id] || '');
+                });
+                sheetData.push(row);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Mes check-ins');
+            
+            XLSX.writeFile(wb, 'Mon_Checkin_Hebdo.xlsx');
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('weeklyCheckin', JSON.stringify(data));
+            } catch (e) {
+                console.warn('localStorage not available, data saved in memory only');
+            }
+        }
+
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('weeklyCheckin');
+                if (saved) {
+                    data = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.warn('Could not load from localStorage');
+            }
+        }
+        
+        function exportData() {
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'mes_checkins_backup.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Données sauvegardées ! Garde ce fichier pour restaurer tes données plus tard.');
+        }
+        
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+        
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    data = importedData;
+                    saveData();
+                    alert('✅ Données importées avec succès !');
+                    if (currentWeek) {
+                        loadWeek();
+                    }
+                } catch (err) {
+                    alert('❌ Erreur lors de l\'import. Vérifie que le fichier est correct.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initWeekSelector();
+        });
+    </script>
+</body>
+</html>
